@@ -11,7 +11,6 @@ When checking max_epsilon, offset it by 10**-14 to avoid
 """
 MAX_EPSILON_OFFSET = 10 ** -14
 
-EPSILON_MIN = 0.0
 EPSILON_WARNING = 5.0
 
 # ---------------------------------
@@ -35,10 +34,24 @@ CL_CHOICES = (
 # Often-used Delta values
 # --------------------------------------
 DELTA_0 = 0.0
-DELTA_10_NEG_5 = 10.0 ** -5
-DELTA_10_NEG_6 = 10.0 ** -6
-DELTA_10_NEG_7 = 10.0 ** -7
+DELTA_10_POWER_NEG_5 = 10.0 ** -5  # .0001
+DELTA_10_POWER_NEG_6 = 10.0 ** -6  # .00001
+DELTA_10_POWER_NEG_7 = 10.0 ** -7  # .000001
 
+# --------------------------------------
+# Statistic Types
+# --------------------------------------
+ALLOWED_VAR_TYPES = ["Integer", "Float", "Categorical", "Boolean"]
+
+"""
+allowedVariableTypes: {
+    "Mean": ["Integer", "Float"],
+    "Count": ["Integer", "Float", "Categorical", "Boolean"],
+    "Variance": ["Integer", "Float"],
+    "Histogram": ["Integer", "Float", "Categorical", "Boolean"],
+    "Quantile": ["Integer", "Float"] // not yet available
+},
+"""
 # --------------------------------------
 # Statistic Types
 # --------------------------------------
@@ -180,13 +193,13 @@ SETUP_Q_02_ANSWERS = dict(
     notHarmButConfidential=(('Information that, if disclosed,'
                              ' would not cause material harm,'
                              ' but which the organization has chosen to keep confidential'),
-                            {'epsilon': 1, 'delta': DELTA_10_NEG_5}),
+                            {'epsilon': 1, 'delta': DELTA_10_POWER_NEG_5}),
     couldCauseHarm=(('Information that could cause risk of material harm to individuals'
                      ' or the organization if disclosed'),
-                    {'epsilon': .25, 'delta': DELTA_10_NEG_6}),
+                    {'epsilon': .25, 'delta': DELTA_10_POWER_NEG_6}),
     wouldLikelyCauseHarm=(('Information that would likely cause serious harm to individuals'
                            ' or the organization if disclosed'),
-                          {'epsilon': .05, 'delta': DELTA_10_NEG_7}),
+                          {'epsilon': .05, 'delta': DELTA_10_POWER_NEG_7}),
     wouldCauseSevereHarm=(('Information that would cause severe harm to individuals or the'
                            ' organization if disclosed. Use of this application is not'
                            ' recommended.'),

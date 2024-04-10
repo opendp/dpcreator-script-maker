@@ -15,7 +15,7 @@ script_spec = \
         "variables": [
             {
             "name": "Income",
-            "type": "Integer",
+            "var_type": "Integer",
             "min": 0,
             "max": 5^6  # $5 M
             },
