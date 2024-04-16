@@ -1,9 +1,12 @@
 from dpcreator_script_maker.dp_script_maker import DPCreatorScriptMaker as ScriptMaker
 from dpcreator_script_maker.models import \
     (CUSTOM_ERROR_MESSAGES,
+     Dataset,
      Delta,
      Epsilon,
-     PrivacyParameters)
+     PrivacyParameters,
+     )
+from dpcreator_script_maker.test_specs.spec_01 import script_spec
 from pydantic import ValidationError as PydanticValidationError
 import dpcreator_script_maker.static_vals as dstatic
 import os
@@ -109,6 +112,11 @@ class TestValidation(unittest.TestCase):
 
         p = PrivacyParameters(**privacy_parameters_input)
 
+    def test_variables(self):
+
+        variables_input = script_spec['dataset']
+
+        d = Dataset(**variables_input)
 
     def test_sum(self):
         self.assertEqual(2, 2)

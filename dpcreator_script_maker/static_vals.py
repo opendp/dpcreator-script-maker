@@ -41,7 +41,11 @@ DELTA_10_POWER_NEG_7 = 10.0 ** -7  # .000001
 # --------------------------------------
 # Statistic Types
 # --------------------------------------
-ALLOWED_VAR_TYPES = ["Integer", "Float", "Categorical", "Boolean"]
+VAR_TYPE_INTEGER = 'Integer'
+VAR_TYPE_FLOAT = 'Float'
+VAR_TYPE_CATEGORICAL = 'Categorical'
+VAR_TYPE_BOOLEAN = 'Boolean'
+ALLOWED_VAR_TYPES = [VAR_TYPE_INTEGER, VAR_TYPE_FLOAT, VAR_TYPE_CATEGORICAL, VAR_TYPE_BOOLEAN]
 
 """
 allowedVariableTypes: {

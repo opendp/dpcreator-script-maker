@@ -17,12 +17,22 @@ script_spec = \
             "name": "Income",
             "var_type": "Integer",
             "min": 0,
-            "max": 5^6  # $5 M
+            "max": 500_000  # $5 M
             },
             {
                 "name": "State",
-                "type": "String",
+                "var_type": "Categorical",
                 "categories": ["CT", "ME", "MA", "NH", "RI", "VT"],  # handling large numbers of categories?
+            },
+            {
+                "name": "smoker",
+                "var_type": "Boolean",
+            },
+            {
+                "name": "previous_diagnosis",
+                "var_type": "Boolean",
+                "true_value": 1,
+                "false_value": 2
             }
         ]
     },
