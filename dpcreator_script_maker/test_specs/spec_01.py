@@ -16,8 +16,10 @@ script_spec = \
             {
             "name": "Income",
             "var_type": "Integer",
-            "min": 0,
-            "max": 500_000  # $5 M
+            "bounds": {
+                "min": 0,
+                "max": 500_000
+              }
             },
             {
                 "name": "State",

@@ -6,7 +6,9 @@ from pydantic import \
      ValidationError,
      conlist,
      confloat,
-     field_validator, model_validator)
+     field_validator,
+     model_validator,
+     validator)
 from typing import List, Literal, Optional, Union
 import dpcreator_script_maker.static_vals as dstatic
 
@@ -31,73 +33,81 @@ class Epsilon(BaseModel):
 class Delta(BaseModel):
     value: confloat(ge=0.0, le=dstatic.DELTA_10_POWER_NEG_5)  # >= .00001
 
+class Bounds(BaseModel):
+    """Object for the min/max bounds. Checks that max > min"""
+    min: float
+    max: float
+
+    @model_validator(mode='after')
+    def check_min_max_constraints(self):
+        """Check that max is greater than min"""
+        if self.min >= self.max:
+            raise ValueError('Maximum value must be greater than minimum value.')
+        return self
+
+
+class ConfidenceLevel(BaseModel):
+    value: Literal[*dstatic.CONFIDENCE_LEVELS]
+
+    @field_validator('value')
+    def valid_confidence_level(cls, value):
+        if value not in dstatic.CONFIDENCE_LEVELS:
+            raise ValueError(("Confidence level must be one of'"
+                              f" {dstatic.CONFIDENCE_LEVELS}"))
+        return value
+
 
 class PrivacyParameters(BaseModel):
     total_epsilon: Epsilon
     total_delta: Optional[Delta] = None
+    confidence_level: Optional[ConfidenceLevel] = None
     number_of_rows_public: bool
     individual_in_at_most_one_row: bool
+
 
 class Variable(BaseModel):
     name: str
     # var_type: Literal[*dstatic.ALLOWED_VAR_TYPES]  # ["Integer", "Float", "Categorical", "Boolean"]
     var_type: Literal[*dstatic.ALLOWED_VAR_TYPES]
-    min: Optional[float] = None
-    max: Optional[float] = None
+    bounds: Optional[Bounds] = None
     categories: Optional[List[Union[str, float]]] = None
     true_value: Optional[Union[str, float, bool]] = None
     false_value: Optional[Union[str, float, bool]] = None
 
     @model_validator(mode='after')
-    def check_min_max_constraints(self):
+    def check_bound_types(self):
         """
-        Check the min/max values in relations to var_type, including the following constraints:
-        - When var_type is either 'Integer' or 'Float':
-            - min/max should both be populated
-            - max should be greather than min
-            - If var_type is 'Integer', min/max should be convertible to integers
-        - If var_type is NOT 'Integer' or 'Float':
-            - min/max should both be None
+        Check the Bounds (min/max) values in relation to var_type.
+        Integer - make sure min/max are integers
+        Float - allowed
+        If var_type is NOT 'Integer' or 'Float':
+            - "bounds" should be NOne
         """
-        var_type = self.var_type
-        min_val = self.min
-        max_val = self.max
+        bounds = self.bounds
 
-        # Validating for Integer and Float types
-        if var_type in [dstatic.VAR_TYPE_INTEGER, dstatic.VAR_TYPE_FLOAT]:
-            if min_val is None or max_val is None:
-                raise ValueError(f"For '{var_type}' type, both min and max must be defined.")
+        # Make sure bounds are set for Integer and Float types
+        #
+        if self.var_type in [dstatic.VAR_TYPE_INTEGER or dstatic.VAR_TYPE_FLOAT]:
+            if not bounds:
+                raise ValueError((f"For '{self.var_type}' type, 'bounds' (min/max)"
+                                 " must be defined."))
+        else:
+            # min and max shouldn't be defined for other var types (e.g. categorical, boolean, etc)
+            if bounds:
+                raise ValueError(f"For '{self.var_type}' type, both min and max should be None.")
 
-            # Ensure min and max are integers if var_type is Integer
-            if var_type == 'Integer':
-                if min_val and not min_val.is_integer():
-                    raise ValueError(f"For '{dstatic.VAR_TYPE_INTEGER}' type, min must be an integer.")
-                if max_val and not max_val.is_integer():
-                    raise ValueError(f"For '{dstatic.VAR_TYPE_INTEGER}' type, max must be an integer.")
-
-            # Ensure min and max are floats if var_type is Float
-            if var_type == 'Float':
-                if not isinstance(min_val, float) or not isinstance(max_val, float):
-                    if isinstance(min_val, int):  # Allow integers as valid floats
-                        min_val = float(min_val)
-                        self.min = min_val
-                    if isinstance(max_val, int):
-                        max_val = float(max_val)
-                        self.max = max_val
-                    else:
-                        raise ValueError(
-                            f"For '{dstatic.VAR_TYPE_FLOAT}' type, both min and max must be floats or integers convertible to floats.")
-
-            # Check that max is greater than min
-            if max_val <= min_val:
-                raise ValueError("max must be greater than min.")
-
-        # Ensuring min and max are None for non-numeric types
-        elif var_type in [dstatic.VAR_TYPE_CATEGORICAL, dstatic.VAR_TYPE_BOOLEAN]:
-            if min_val is not None or max_val is not None:
-                raise ValueError(f"For '{var_type}' type, both min and max should be None.")
+        # If var type is an Integer, make sure the bounds are integers
+        #
+        if self.var_type == dstatic.VAR_TYPE_INTEGER:
+            if not bounds.min.is_integer():
+                raise ValueError((f"For variable type '{dstatic.VAR_TYPE_INTEGER}',"
+                                  " 'min' must be an integer."))
+            if not bounds.max.is_integer():
+                raise ValueError((f"For variable type '{dstatic.VAR_TYPE_INTEGER}',"
+                                  " 'max' must be an integer."))
 
         return self
+
 
     @model_validator(mode='after')
     def check_categorical_constraints(self):
@@ -144,3 +154,43 @@ class Dataset(BaseModel):
     name: str
     description: Optional[str] = None
     variables: List[Variable] = Field(..., min_items=1)
+
+
+class Statistic(BaseModel):
+    var_name: str
+    stat_type: Literal[*dstatic.DP_STATS_CHOICES]
+    epsilon: Optional[Epsilon]
+    confidence_level: Optional[ConfidenceLevel] = None
+    delta: Optional[Delta] = None
+    # bounds  # for now, default to specs in Variable
+    # categories  # for now, default to specs in Variable
+
+'''
+
+{
+            "variable": "Income",
+            "statistic": "histogram",
+            "confidence_level": 0.95,
+            "epsilon": 0.1,  # optional
+            "delta": None,  # optional
+            "missing_value_handling": {
+                "type": "insert_fixed",
+                "fixed_value": 35
+            }
+        },
+        {
+            "statistic": "mean",
+            "variable": "TypingSpeed",
+            "epsilon": 0.25,
+            "delta": None,
+            "bounds": {
+                "min": 3.0,
+                "max": 30.0
+            },
+            "missing_value_handling": {
+                "type": "insert_fixed",
+                "fixed_value": 9.0
+            },
+            "confidence_level": 0.99
+        }
+'''

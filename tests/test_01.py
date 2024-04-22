@@ -1,6 +1,7 @@
 from dpcreator_script_maker.dp_script_maker import DPCreatorScriptMaker as ScriptMaker
 from dpcreator_script_maker.models import \
     (CUSTOM_ERROR_MESSAGES,
+     ConfidenceLevel,
      Dataset,
      Delta,
      Epsilon,
@@ -23,18 +24,18 @@ class TestValidation(unittest.TestCase):
 
         # acceptable epsilons
         for epval in [0, 0.7, 1, 4.999]:
-            e = Epsilon(**{'value': epval})
+            e = Epsilon(value=epval)
             self.assertEqual(e.value, epval)
 
         # warnings if epsilon is gt 5.0
         for epval in [5.000001, 6, 10, 1000]:
             with self.assertWarns(Warning) as context:
-                _e = Epsilon(**{'value': epval})
+                _e = Epsilon(value=epval)
             self.assertEqual(CUSTOM_ERROR_MESSAGES['epsilon_warning'], str(context.warning))
 
         # can't be negative
         with self.assertRaises(PydanticValidationError) as context:
-            Epsilon(**{'value': -2})
+            Epsilon(value=-2)
         self.assertEqual(context.exception.errors()[0].get('msg'),
                          'Input should be greater than or equal to 0')
 
@@ -66,6 +67,7 @@ class TestValidation(unittest.TestCase):
         privacy_parameters_input = {
             "total_epsilon": {"value": 2.5},
             "total_delta": {"value": .000005},
+            "confidence_level": {"value": dstatic.CL_99},
             "number_of_rows_public": True,
             "individual_in_at_most_one_row": False
         }
@@ -94,6 +96,7 @@ class TestValidation(unittest.TestCase):
         privacy_parameters_input_3 = {
             "total_epsilon": {"value": 2.5},
             "total_delta": {"value": .000005},
+            "confidence_level": None,
             "number_of_rows_public": False,
             "individual_in_at_most_one_row": True
         }

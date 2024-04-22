@@ -16,9 +16,14 @@ EPSILON_WARNING = 5.0
 # ---------------------------------
 # Confidence level static values
 # ---------------------------------
-CL_90 = 0.90  # just to look at
-CL_95 = 0.95
-CL_99 = 0.99
+CL_68 = 0.68  # 68% confidence level
+CL_80 = 0.80  # 80% confidence level
+CL_90 = 0.90  # 90% confidence level
+CL_95 = 0.95  # 95% confidence level
+CL_99 = 0.99  # 99% confidence level
+CL_999 = 0.999  # 99.9% confidence level
+
+CONFIDENCE_LEVELS = [CL_68, CL_80, CL_90, CL_95, CL_99, CL_999]
 
 CL_90_ALPHA = 0.10
 CL_95_ALPHA = 0.05
@@ -63,8 +68,8 @@ DP_MEAN = 'mean'
 DP_SUM = 'sum'
 DP_COUNT = 'count'
 DP_HISTOGRAM = 'histogram'
-DP_HISTOGRAM_CATEGORICAL = 'histogram_categorical'
-DP_HISTOGRAM_INTEGER = 'histogram_integer'
+# DP_HISTOGRAM_CATEGORICAL = 'histogram_categorical'
+# DP_HISTOGRAM_INTEGER = 'histogram_integer'
 DP_QUANTILE = 'quantile'
 DP_VARIANCE = 'variance'
 DP_STATS_CHOICES = [DP_COUNT,
