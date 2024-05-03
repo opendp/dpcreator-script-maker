@@ -73,6 +73,7 @@ class Variable(BaseModel):
     categories: Optional[List[Union[str, float]]] = None
     true_value: Optional[Union[str, float, bool]] = None
     false_value: Optional[Union[str, float, bool]] = None
+    impute_constant: Optional[Union[str, float, bool]] = None  
 
     @model_validator(mode='after')
     def check_bound_types(self):
@@ -149,21 +150,53 @@ class Variable(BaseModel):
                 raise ValueError('"true_value" and "false_value" must be different.')
         return self
 
+    '''@model_validator(mode='after')
+    def check_impute_constant(self):
+        """
+        If an impute constant is set, make sure it fits the
+         parameters of the var_type, bounds, categories, etc.
+        """
+        impute_val = self.impute_constant
+        var_type = self.var_type
+
+        if isinstance(impute_val, str):
+            # if not var_type not in [dstatic.VAR_TYPE_CATEGORICAL, dstatic.VAR_TYPE_BOOLEAN]:
+            #     raise ValueError('The "impute_value" does not match the variable type'
+            #"true_value" and "false_value")
+            if var_type == dstatic.VAR_TYPE_CATEGORICAL:
+                if impute_val not in self.categories:
+                    raise ValueError('The "impute_value" does not match any of the specified categories.')
+
+            if var_type == dstatic.VAR_TYPE_BOOLEAN:
+                # Have true and false values been specified?
+                if self.true_value and self.false_value:
+                    if self.impute_constant not in [self.true_value, self.false_value]:
+                        raise ValueError((f'The "impute_value" for this {dstatic.VAR_TYPE_BOOLEAN}'
+                                          ' variable does not match the specified "tru_value" or "false_value'))
+                else:
+
+
+                if
+                    impute_val not in self.
+    '''
+
 
 class Dataset(BaseModel):
     name: str
     description: Optional[str] = None
-    variables: List[Variable] = Field(..., min_items=1)
+    variables: List[Variable] = Field(..., min_length=1)
 
 
 class Statistic(BaseModel):
-    var_name: str
+    var_name: str  # Is this too messy a way to connect to a Variable?
     stat_type: Literal[*dstatic.DP_STATS_CHOICES]
     epsilon: Optional[Epsilon]
-    confidence_level: Optional[ConfidenceLevel] = None
     delta: Optional[Delta] = None
-    # bounds  # for now, default to specs in Variable
-    # categories  # for now, default to specs in Variable
+    # missing_value_handling: Optional
+    # By default, the next three values may be taken from the "Variable" data or overall
+    # confidence_level: Optional[ConfidenceLevel] = None  # default: take from overall privacy parameters
+    # bounds  # for now, default to info on the Variable
+    # categories  # for now, default to info in Variable
 
 '''
 
